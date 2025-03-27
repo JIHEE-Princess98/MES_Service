@@ -10,11 +10,11 @@ const getUsers = async (req, res) => {
 };
 
 const createUser = async (req, res) => {
-    const { loginId, name, passwordHash, role, clientType, clientName, phone, email, factory, part, rank } = req.body;
+    const { loginId, name, password, role, clientType, clientName, phone, email, factory, part, rank } = req.body;
   
     try {
       const userIdx = await userModel.createUserWithProfile(
-        { loginId, name, passwordHash, role },
+        { loginId, name, password, role },
         { clientType, clientName, phone, email, factory, part, rank }
       );
   

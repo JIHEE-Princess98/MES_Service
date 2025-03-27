@@ -1,5 +1,6 @@
 const db = require('../config/db');
 const userQueries = require('../queries/userQueries');
+const bcrypt = require('bcrypt');
 
 async function getAllUser() {
     const [rows] = await db.query(userQueries.getAllUser);
@@ -12,7 +13,19 @@ async function createUserWithProfile(userData, profileData) {
     try {
         await conn.beginTransaction();
 
-        const [result] = await conn.execute(userQueries.createUser, [userData.loginId, userData.name, userData.passwordHash, userData.role]);
+        if (!userData.password) {
+            throw new Error('Password is required for hashing.');
+        }
+
+        const saltRounds = 10;
+        const passwordHash = await bcrypt.hash(userData.password, saltRounds); // 🔑 여기!
+
+        const [result] = await conn.execute(userQueries.createUser, [
+            userData.loginId,
+            userData.name,
+            passwordHash,
+            userData.role
+        ]);
 
         const userIdx = result.insertId;
 
@@ -31,6 +44,7 @@ async function createUserWithProfile(userData, profileData) {
         return userIdx;
     } catch (err) {
         await conn.rollback();
+        console.error('Error inserting user:', err);
         throw err;
     } finally {
         conn.release();
